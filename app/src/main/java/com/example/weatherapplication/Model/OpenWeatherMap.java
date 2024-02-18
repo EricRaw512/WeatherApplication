@@ -4,7 +4,7 @@ import java.util.List;
 
 public class OpenWeatherMap {
     private Clouds clouds;
-    private List<Weather> weathers;
+    private List<Weather> weather;
     private String base;
     private Main main;
     private Wind wind;
@@ -18,9 +18,9 @@ public class OpenWeatherMap {
     public OpenWeatherMap() {
     }
 
-    public OpenWeatherMap(Clouds clouds, List<Weather> weathers, String base, Main main, Wind wind, Rain rain, int dt, Sys sys, int id, String name, int cod) {
+    public OpenWeatherMap(Clouds clouds, List<Weather> weather, String base, Main main, Wind wind, Rain rain, int dt, Sys sys, int id, String name, int cod) {
         this.clouds = clouds;
-        this.weathers = weathers;
+        this.weather = weather;
         this.base = base;
         this.main = main;
         this.wind = wind;
@@ -41,11 +41,11 @@ public class OpenWeatherMap {
     }
 
     public List<Weather> getWeathers() {
-        return weathers;
+        return weather;
     }
 
-    public void setWeathers(List<Weather> weathers) {
-        this.weathers = weathers;
+    public void setWeather(List<Weather> weather) {
+        this.weather = weather;
     }
 
     public String getBase() {

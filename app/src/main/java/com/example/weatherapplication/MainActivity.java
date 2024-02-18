@@ -5,13 +5,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.Manifest;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -26,7 +29,11 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.Priority;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
@@ -36,6 +43,7 @@ import com.squareup.picasso.Picasso;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -70,21 +78,65 @@ public class MainActivity extends AppCompatActivity {
 
         //Get Coordinates
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        getLastLocation();
+        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 6000).build();
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                for (Location location : locationResult.getLocations()) {
+                    lat = location.getLatitude();
+                    lng = location.getLongitude();
+                    currentLocation = location;
+                }
+            }
+        };
     }
 
-    private void getLastLocation() {
+    private boolean getLastLocation() {
         checkPermission();
-        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(location -> {
-            if (location != null) {
-                currentLocation = location;
-            }
-        });
+        fusedLocationProviderClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    Log.d("MainActivity", "No location available");
+                    if (location != null) {
+                        // Update your UI with location data
+                        currentLocation = location;
+                        // Access latitude and longitude here
+                        lat = location.getLatitude();
+                        lng = location.getLongitude();
+                        // ... (use latitude and longitude as needed)
+                        new GetWeather().execute(Common.apiRequest(String.valueOf(lat), String.valueOf(lng)));
+                    } else {
+                        // Handle the case where no location is available
+                        Log.d("MainActivity", "No location available");
+                    }
+                });
 
-        lat = currentLocation.getLatitude();
-        lng = currentLocation.getLongitude();
+        return currentLocation != null;
+    }
 
-        new GetWeather().execute(Common.apiRequest(String.valueOf(lat), String.valueOf(lng)));
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!getLastLocation()) {
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    private void stopLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback);
+    }
+
+    private void startLocationUpdates() {
+        checkPermission();
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest,
+                locationCallback,
+                Looper.getMainLooper());
     }
 
     public void checkPermission() {
@@ -94,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_NETWORK_STATE
             }, FINE_PERMISSION_CODE);
-            return;
         }
     }
 
@@ -110,13 +161,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startLocationUpdates() {
-        checkPermission();
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest,
-                locationCallback,
-                Looper.getMainLooper());
-    }
-
     private class GetWeather extends AsyncTaskExecutorService<String, String, String> {
         ProgressBar pb = new ProgressBar(MainActivity.this);
 
@@ -130,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
             String stream = null;
 
             Helper http = new Helper();
-            stream = http.getHTTPData(params);
+            stream = http.getHTTPData(Common.API_LINK + params);
             return stream;
         }
 
