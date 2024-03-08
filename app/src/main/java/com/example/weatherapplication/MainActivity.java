@@ -3,98 +3,97 @@ package com.example.weatherapplication;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.lifecycle.ViewModelProvider;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
 import android.Manifest;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.weatherapplication.Common.Common;
-import com.example.weatherapplication.Helper.Helper;
-import com.example.weatherapplication.Model.OpenWeatherMap;
+import com.example.weatherapplication.Model.Weather;
+import com.example.weatherapplication.ViewModel.WeatherViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.Priority;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.squareup.picasso.Picasso;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
     private final int FINE_PERMISSION_CODE = 1;
     private LocationCallback locationCallback;
-    private LocationRequest locationRequest;
+    private WeatherViewModel viewModel;
 
     TextView txtCity, txtLastUpdate, txtDescription, txtHumidity, txtTime, txtCelsius;
     ImageView imageView;
     static double lat, lng;
     Location currentLocation;
     FusedLocationProviderClient fusedLocationProviderClient;
-    OpenWeatherMap openWeatherMap = new OpenWeatherMap();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Control
-        txtCity = (TextView) findViewById(R.id.txtCity);
-        txtLastUpdate = (TextView) findViewById(R.id.txtLastUpdate);
-        txtDescription = (TextView) findViewById(R.id.txtDescription);
-        txtHumidity = (TextView) findViewById(R.id.txtHumidity);
-        txtTime = (TextView) findViewById(R.id.txtTime);
-        txtCelsius = (TextView) findViewById(R.id.txtCelsius);
-        imageView = (ImageView) findViewById(R.id.imageView);
+//        Control
+//        txtCity = (TextView) findViewById(R.id.txtCity);
+//        txtLastUpdate = (TextView) findViewById(R.id.txtLastUpdate);
+//        txtDescription = (TextView) findViewById(R.id.txtDescription);
+//        txtHumidity = (TextView) findViewById(R.id.txtHumidity);
+//        txtTime = (TextView) findViewById(R.id.txtTime);
+//        txtCelsius = (TextView) findViewById(R.id.txtCelsius);
+//        imageView = (ImageView) findViewById(R.id.imageView);
+
+        viewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
+
+        viewModel.getWeatherData().observe(this, weather -> {
+            if (weather != null) {
+                updateUI(weather);
+            }
+        });
 
 
         //Get Coordinates
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 6000).build();
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-                for (Location location : locationResult.getLocations()) {
-                    lat = location.getLatitude();
-                    lng = location.getLongitude();
-                    currentLocation = location;
+                if (locationResult.getLocations().isEmpty()) {
+                    showLocationErrorMessage();
+                    return;
                 }
-            }
+
+                Location location = locationResult.getLastLocation();
+                lat = location.getLatitude();
+                lng = location.getLongitude();
+                currentLocation = location;
+
+                String latLng = Common.apiRequest(String.valueOf(lat), String.valueOf(lng));
+                viewModel.fetchWeatherData(latLng);
+            };
         };
+
+        checkPermissionAndGetLocation();
     }
 
-    private boolean getLastLocation() {
+    private void checkPermissionAndGetLocation() {
+        if (checkPermission()) {
+            getCurrentLocation();
+        } else {
+            requestLocationPermission();
+        }
+    }
+
+    private void getCurrentLocation() {
         checkPermission();
-        fusedLocationProviderClient.getLastLocation()
+        fusedLocationProviderClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener(location -> {
                     Log.d("MainActivity", "No location available");
                     if (location != null) {
@@ -104,27 +103,39 @@ public class MainActivity extends AppCompatActivity {
                         lat = location.getLatitude();
                         lng = location.getLongitude();
                         // ... (use latitude and longitude as needed)
-                        new GetWeather().execute(Common.apiRequest(String.valueOf(lat), String.valueOf(lng)));
+                        String latLng = Common.apiRequest(String.valueOf(lat), String.valueOf(lng));
+                        viewModel.fetchWeatherData(latLng);
                     } else {
-                        // Handle the case where no location is available
-                        Log.d("MainActivity", "No location available");
+                        showLocationErrorMessage();
                     }
-                });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("MainActivity", "Failed to get current location", e);
+                    showLocationErrorMessage();
+                }
+        );
+    }
 
-        return currentLocation != null;
+    public void requestLocationPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_NETWORK_STATE
+        }, FINE_PERMISSION_CODE);
+    }
+
+    private void showPermissionDeniedMessage() {
+        Toast.makeText(this, "Please allow the location permission", Toast.LENGTH_LONG).show();
+    }
+
+    private void showLocationErrorMessage() {
+        Toast.makeText(this, "Failed to get current location", Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (!getLastLocation()) {
-            startLocationUpdates();
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onDestroy() {
+        super.onDestroy();
+        // Stop location updates when the app is being destroyed
         stopLocationUpdates();
     }
 
@@ -132,21 +143,8 @@ public class MainActivity extends AppCompatActivity {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback);
     }
 
-    private void startLocationUpdates() {
-        checkPermission();
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest,
-                locationCallback,
-                Looper.getMainLooper());
-    }
-
-    public void checkPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_NETWORK_STATE
-            }, FINE_PERMISSION_CODE);
-        }
+    public boolean checkPermission() {
+        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED);
     }
 
     @Override
@@ -154,121 +152,25 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == FINE_PERMISSION_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLastLocation();
+                getCurrentLocation();
             } else {
-                Toast.makeText(this, "Please allow the location permission", Toast.LENGTH_SHORT).show();
+                showPermissionDeniedMessage();
             }
         }
     }
 
-    private class GetWeather extends AsyncTaskExecutorService<String, String, String> {
-        ProgressBar pb = new ProgressBar(MainActivity.this);
+    private void updateUI(Weather weather) {
+        if (weather == null) return;
 
-        @Override
-        protected void onPreExecute() {
-            pb.setVisibility(View.VISIBLE);
-        }
 
-        @Override
-        protected String doInBackground(String params) {
-            String stream = null;
-
-            Helper http = new Helper();
-            stream = http.getHTTPData(Common.API_LINK + params);
-            return stream;
-        }
-
-        @SuppressLint("DefaultLocale")
-        @Override
-        protected void onPostExecute(String s) {
-            if (s.contains("Error: Not found city")) {
-                pb.setVisibility(View.GONE);
-                return;
-            }
-
-            Gson gson = new Gson();
-            Type mType = new TypeToken<OpenWeatherMap> () {}.getType();
-            openWeatherMap = gson.fromJson(s, mType);
-            pb.setVisibility(View.GONE);
-
-            txtCity.setText(String.format("%s, %s,", openWeatherMap.getName(), openWeatherMap.getSys().getCountry()));
-            txtLastUpdate.setText(String.format("Last Updated: %s", Common.getDateNow()));
-            txtDescription.setText(String.format("%s", openWeatherMap.getWeathers().get(0).getDescription()));
-            txtHumidity.setText(String.format("%d%%", openWeatherMap.getMain().getHumidity()));
-            txtTime.setText(String.format("%s/%s", Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunrise()), Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunset())));
-            txtCelsius.setText(String.format("%.2f °C", openWeatherMap.getMain().getTemp()));
-            Picasso.get()
-                    .load(Common.getImage(openWeatherMap.getWeathers().get(0).getIcon()))
-                    .into(imageView);
-        }
-    }
-
-    public static abstract class AsyncTaskExecutorService < Params, Progress, Result > {
-
-        private final ExecutorService executor;
-        private Handler handler;
-
-        protected AsyncTaskExecutorService() {
-            executor = Executors.newSingleThreadExecutor(r -> {
-                Thread t = new Thread(r);
-                t.setDaemon(true);
-                return t;
-            });
-
-        }
-
-        public ExecutorService getExecutor() {
-            return executor;
-        }
-
-        public Handler getHandler() {
-            if (handler == null) {
-                synchronized(AsyncTaskExecutorService.class) {
-                    handler = new Handler(Looper.getMainLooper());
-                }
-            }
-            return handler;
-        }
-
-        protected void onPreExecute() {
-            // Override this method wherever you want to perform task before background execution get started
-        }
-
-        protected abstract Result doInBackground(Params params);
-
-        protected abstract void onPostExecute(Result result);
-
-        protected void onProgressUpdate(@NotNull Progress value) {
-            // Override this method whenever you want update a progress result
-        }
-
-        // used for push progress resort to UI
-        public void publishProgress(@NotNull Progress value) {
-            getHandler().post(() -> onProgressUpdate(value));
-        }
-
-        public void execute() {
-            execute(null);
-        }
-
-        public void execute(Params params) {
-            getHandler().post(() -> {
-                onPreExecute();
-                executor.execute(() -> {
-                    Result result = doInBackground(params);
-                    getHandler().post(() -> onPostExecute(result));
-                });
-            });
-        }
-
-        public void shutDown() {
-            if (executor != null) {
-                executor.shutdownNow();
-            }
-        }
-
-        public boolean isCancelled() {
-            return executor == null || executor.isTerminated() || executor.isShutdown();
-        }
+//        txtCity.setText(String.format("%s, %s,", openWeatherMap.getName(), openWeatherMap.getSys().getCountry()));
+//        txtLastUpdate.setText(String.format("Last Updated: %s", Common.getDateNow()));
+//        txtDescription.setText(String.format("%s", openWeatherMap.getWeathers().get(0).getDescription()));
+//        txtHumidity.setText(String.format("%d%%", openWeatherMap.getMain().getHumidity()));
+//        txtTime.setText(String.format("%s/%s", Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunrise()), Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunset())));
+//        txtCelsius.setText(String.format("%.2f °C", openWeatherMap.getMain().getTemp()));
+//        Picasso.get()
+//                .load(Common.getImage(openWeatherMap.getWeathers().get(0).getIcon()))
+//                .into(imageView);
     }
 }
