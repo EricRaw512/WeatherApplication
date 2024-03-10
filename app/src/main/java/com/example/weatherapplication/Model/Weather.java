@@ -7,17 +7,7 @@ public class Weather {
     private String address;
     private List<Days> days;
 
-    public Weather(String address, List<Days> days) {
-        this.address = address;
-        this.days = days;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
+    public Weather() {
     }
 
     public List<Days> getDays() {

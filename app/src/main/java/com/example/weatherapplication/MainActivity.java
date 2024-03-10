@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.Manifest;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import com.example.weatherapplication.Adapters.HoursAdapter;
 import com.example.weatherapplication.Common.Common;
+import com.example.weatherapplication.Model.Days;
 import com.example.weatherapplication.Model.Weather;
 import com.example.weatherapplication.ViewModel.WeatherViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -25,17 +27,16 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
-import com.squareup.picasso.Picasso;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private final int FINE_PERMISSION_CODE = 1;
     private LocationCallback locationCallback;
     private WeatherViewModel viewModel;
-    private RecyclerView.Adapter adapterHours;
-    private RecyclerView recyclerView;
 
-    TextView txtCity, txtLastUpdate, txtDescription, txtHumidity, txtTime, txtCelsius;
-    ImageView imageView;
+    TextView txtDate, txtCondition, txtTemp, txtHighAndLowTemp, txtPrecipProb, txtPrecipType, txtWindSpeed, txtHumidity;
+    ImageView weatherIcon, precipIcon, windIcon, humidityIcon;
     static double lat, lng;
     Location currentLocation;
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -52,6 +53,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //set Context
+        txtDate = (TextView) findViewById(R.id.textDate);
+        txtCondition = (TextView) findViewById(R.id.textCondition);
+        txtTemp = (TextView) findViewById(R.id.textTemp);
+        txtHighAndLowTemp = (TextView) findViewById(R.id.textHighAndLowTemp);
+        txtPrecipProb = (TextView) findViewById(R.id.textPrecipProb);
+        txtPrecipType = (TextView) findViewById(R.id.textPrecipType);
+        txtWindSpeed = (TextView) findViewById(R.id.textWindSpeed);
+        txtHumidity = (TextView) findViewById(R.id.textHumidityPercen);
+        weatherIcon = (ImageView) findViewById(R.id.weatherIcon);
+        precipIcon = (ImageView) findViewById(R.id.precipIcon); 
+        windIcon = (ImageView) findViewById(R.id.windIcon);
+        humidityIcon = (ImageView) findViewById(R.id.humidityIcon);
 
         //Get Coordinates
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -71,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 
                 String latLng = Common.apiRequest(String.valueOf(lat), String.valueOf(lng));
                 viewModel.fetchWeatherData(latLng);
-            };
+            }
         };
 
         checkPermissionAndGetLocation();
@@ -156,19 +170,35 @@ public class MainActivity extends AppCompatActivity {
     private void updateUI(Weather weather) {
         if (weather == null) return;
 
-        int numberOfHoursForecast = 0;
-        recyclerView = findViewById(R.id.view1);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        adapterHours = new HoursAdapter(Common.listOfHoursForecast(weather));
+        setButton(weather);
 
-//        txtCity.setText(String.format("%s, %s,", openWeatherMap.getName(), openWeatherMap.getSys().getCountry()));
-//        txtLastUpdate.setText(String.format("Last Updated: %s", Common.getDateNow()));
-//        txtDescription.setText(String.format("%s", openWeatherMap.getWeathers().get(0).getDescription()));
-//        txtHumidity.setText(String.format("%d%%", openWeatherMap.getMain().getHumidity()));
-//        txtTime.setText(String.format("%s/%s", Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunrise()), Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunset())));
-//        txtCelsius.setText(String.format("%.2f °C", openWeatherMap.getMain().getTemp()));
-//        Picasso.get()
-//                .load(Common.getImage(openWeatherMap.getWeathers().get(0).getIcon()))
-//                .into(imageView);
+        Days todayWeather = weather.getDays().get(0);
+        txtDate.setText(Common.convertDateFormat(todayWeather.getDatetime()));
+        txtCondition.setText(todayWeather.getConditions());
+        txtTemp.setText(String.format("%s°C", todayWeather.getTemp()));
+        txtHighAndLowTemp.setText(String.format("H:%s L:%s", todayWeather.getTempMax(), todayWeather.getTempMin()));
+        txtPrecipProb.setText(String.format("%s%%", todayWeather.getPrecipProb()));
+        txtPrecipType.setText(todayWeather.getPrecipType().get(0));
+        txtWindSpeed.setText(String.format("%s Km/h", todayWeather.getWindSpeed()));
+        txtHumidity.setText(String.format("%s%%", todayWeather.getHumidity()));
+        weatherIcon.setImageResource(Common.getWeatherIcon(todayWeather.getIcon()));
+        precipIcon.setImageResource(Common.getWeatherIcon("umbrella"));
+        windIcon.setImageResource(Common.getWeatherIcon("wind"));
+        humidityIcon.setImageResource(Common.getWeatherIcon("humidity"));
+
+        RecyclerView recyclerView = findViewById(R.id.view1);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        RecyclerView.Adapter adapterHours = new HoursAdapter(Common.listOfHoursForecast(weather));
+        recyclerView.setAdapter(adapterHours);
+    }
+
+    private void setButton(Weather weather) {
+        TextView next7DayBtn = findViewById(R.id.nxt7DaysBtn);
+        next7DayBtn.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, TomorrowActivity.class);
+            ArrayList<Days> daysList = new ArrayList<>(weather.getDays());
+            intent.putParcelableArrayListExtra("daysList", daysList);
+            startActivity(intent);
+        });
     }
 }

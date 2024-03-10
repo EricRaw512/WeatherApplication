@@ -8,15 +8,16 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 
+import io.reactivex.Observable;
+import io.reactivex.schedulers.Schedulers;
+
 public class WeatherRepository {
 
-    public String fetchWeatherData(String latLng) {
-        String stream = null;
-
-        Helper http = new Helper();
-        stream = http.getHTTPData(Common.API_LINK + latLng);
-
-        return stream;
+    public Observable<String> fetchWeatherData(String latLng) {
+        return Observable.fromCallable(() -> {
+            Helper http = new Helper();
+            return http.getHTTPData(Common.API_LINK + latLng);
+        }).subscribeOn(Schedulers.io());
     }
 
     public Weather parseWeatherData(String jsonString) {
@@ -25,8 +26,12 @@ public class WeatherRepository {
         return gson.fromJson(jsonString, mType);
     }
 
-    public Weather fetchAndParseWeatherData(String latLng) {
-        String jsonData = fetchWeatherData(latLng);
-        return parseWeatherData(jsonData);
+    public Observable<Weather> fetchAndParseWeatherData(String latLng) {
+        return fetchWeatherData(latLng)
+                .map(this::parseWeatherData)
+                .onErrorReturn(throwable -> {
+                    // Handle error, e.g., log it or return a default Weather object
+                    return new Weather(); // Return a default Weather object or null
+                });
     }
 }

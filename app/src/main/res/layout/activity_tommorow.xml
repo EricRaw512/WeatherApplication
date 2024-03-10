@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black_1"
-    tools:context=".MainActivity">
+    android:background="@color/black_1">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -15,27 +15,25 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/back_btn"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
-                android:text="@string/today"
-                android:textAlignment="center"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText" />
+                android:background="@drawable/back_btn_background">
 
-            <TextView
-                android:id="@+id/textDate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Mon June 12"
-                android:textAlignment="center"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
+                <ImageView
+                    android:id="@+id/backIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:srcCompat="@drawable/back" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -44,38 +42,55 @@
                 android:background="@drawable/background_2"
                 android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/weatherIcon"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="150dp"
-                    android:layout_margin="16dp"
-                    tools:srcCompat="@drawable/clear_day" />
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/textCondition"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Clear Day"
-                    android:textAlignment="center"
-                    android:textColor="@color/white"
-                    android:textSize="20sp" />
+                    <ImageView
+                        android:id="@+id/tomorrowIcon"
+                        android:layout_width="0dp"
+                        android:layout_height="121dp"
+                        android:layout_margin="16dp"
+                        android:layout_weight="0.5"
+                        tools:srcCompat="@drawable/clear_day" />
 
-                <TextView
-                    android:id="@+id/textTemp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="25°C"
-                    android:textAlignment="center"
-                    android:textColor="@color/white" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.5"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/textHighAndLowTemp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="H:27 L:18"
-                    android:textAlignment="center"
-                    android:textColor="@color/white" />
+                        <TextView
+                            android:id="@+id/textTomorrow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Tommorow"
+                            android:textAlignment="viewStart"
+                            android:textColor="@color/white"
+                            android:textSize="24sp" />
+
+                        <TextView
+                            android:id="@+id/textTomorrowTemp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="25°C"
+                            android:textAlignment="viewStart"
+                            android:textColor="@color/white"
+                            android:textSize="43sp" />
+
+                        <TextView
+                            android:id="@+id/textTomorrowCondition"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Sunny"
+                            android:textAlignment="viewStart"
+                            android:textColor="@color/white"
+                            android:textSize="20sp" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -90,13 +105,13 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/precipIcon"
+                            android:id="@+id/tomorrowPrecipIcon"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             tools:srcCompat="@drawable/umbrella" />
 
                         <TextView
-                            android:id="@+id/textPrecipProb"
+                            android:id="@+id/textTomorrowPrecipProb"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="22%"
@@ -104,7 +119,7 @@
                             android:textColor="@color/white" />
 
                         <TextView
-                            android:id="@+id/textPrecipType"
+                            android:id="@+id/textTomorrowPrecipType"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Rain"
@@ -120,13 +135,13 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/windIcon"
+                            android:id="@+id/tomorrowWindIcon"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             tools:srcCompat="@drawable/wind" />
 
                         <TextView
-                            android:id="@+id/textWindSpeed"
+                            android:id="@+id/textTomorrowWindSpeed"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="16 km/h"
@@ -134,7 +149,7 @@
                             android:textColor="@color/white" />
 
                         <TextView
-                            android:id="@+id/textWind"
+                            android:id="@+id/textTomorrowWind"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Wind speed"
@@ -150,13 +165,13 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:id="@+id/humidityIcon"
+                            android:id="@+id/TomorrowHumidityIcon"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             tools:srcCompat="@drawable/humidity" />
 
                         <TextView
-                            android:id="@+id/textHumidityPercen"
+                            android:id="@+id/textTomorrowHumidityPercen"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="18%"
@@ -164,7 +179,7 @@
                             android:textColor="@color/white" />
 
                         <TextView
-                            android:id="@+id/textHumidity"
+                            android:id="@+id/textTomorrowHumidity"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Humidity"
@@ -173,42 +188,15 @@
                     </LinearLayout>
 
                 </LinearLayout>
-            </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/textView12"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Today"
-                    android:textColor="@color/yellow"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/nxt7DaysBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Next 7 days:"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"/>
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/view1"
+                android:id="@+id/view2"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"/>
-
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:nestedScrollingEnabled="true" />
 
         </LinearLayout>
     </ScrollView>

@@ -1,30 +1,66 @@
 package com.example.weatherapplication.Model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import androidx.annotation.NonNull;
+
 import java.util.List;
 
-public class Days {
+public class Days implements Parcelable {
 
     private String datetime;
     private double temp;
+
+    private double tempmax;
+
+    private double tempmin;
     private double humidity;
-    private double precipProb;
-    private List<String> precipType;
+    private double precipprob;
+    private List<String> preciptype;
     private double windSpeed;
     private String conditions;
     private String icon;
     private List<Hours> hours;
 
-    public Days(String datetime, double temp, double humidity, double precipProb, List<String> precipType, double windSpeed, String conditions, String icon, List<Hours> hours) {
+    public Days(String datetime, double temp, double tempMax, double tempMin, double humidity, double precipProb, List<String> precipType, double windSpeed, String conditions, String icon, List<Hours> hours) {
         this.datetime = datetime;
         this.temp = temp;
+        this.tempmax = tempMax;
+        this.tempmin = tempMin;
         this.humidity = humidity;
-        this.precipProb = precipProb;
-        this.precipType = precipType;
+        this.precipprob = precipProb;
+        this.preciptype = precipType;
         this.windSpeed = windSpeed;
         this.conditions = conditions;
         this.icon = icon;
         this.hours = hours;
     }
+
+    protected Days(Parcel in) {
+        datetime = in.readString();
+        temp = in.readDouble();
+        tempmax = in.readDouble();
+        tempmin = in.readDouble();
+        humidity = in.readDouble();
+        precipprob = in.readDouble();
+        preciptype = in.createStringArrayList();
+        windSpeed = in.readDouble();
+        conditions = in.readString();
+        icon = in.readString();
+    }
+
+    public static final Creator<Days> CREATOR = new Creator<Days>() {
+        @Override
+        public Days createFromParcel(Parcel in) {
+            return new Days(in);
+        }
+
+        @Override
+        public Days[] newArray(int size) {
+            return new Days[size];
+        }
+    };
 
     public String getDatetime() {
         return datetime;
@@ -42,6 +78,22 @@ public class Days {
         this.temp = temp;
     }
 
+    public double getTempMax() {
+        return tempmax;
+    }
+
+    public void setTempMax(double tempMax) {
+        this.tempmax = tempMax;
+    }
+
+    public double getTempMin() {
+        return tempmin;
+    }
+
+    public void setTempMin(double tempMin) {
+        this.tempmin = tempMin;
+    }
+
     public double getHumidity() {
         return humidity;
     }
@@ -51,19 +103,19 @@ public class Days {
     }
 
     public double getPrecipProb() {
-        return precipProb;
+        return precipprob;
     }
 
     public void setPrecipProb(double precipProb) {
-        this.precipProb = precipProb;
+        this.precipprob = precipProb;
     }
 
     public List<String> getPrecipType() {
-        return precipType;
+        return preciptype;
     }
 
     public void setPrecipType(List<String> precipType) {
-        this.precipType = precipType;
+        this.preciptype = precipType;
     }
 
     public double getWindSpeed() {
@@ -96,5 +148,24 @@ public class Days {
 
     public void setHours(List<Hours> hours) {
         this.hours = hours;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
+        dest.writeString(datetime);
+        dest.writeDouble(temp);
+        dest.writeDouble(tempmax);
+        dest.writeDouble(tempmin);
+        dest.writeDouble(humidity);
+        dest.writeDouble(precipprob);
+        dest.writeStringList(preciptype);
+        dest.writeDouble(windSpeed);
+        dest.writeString(conditions);
+        dest.writeString(icon);
     }
 }

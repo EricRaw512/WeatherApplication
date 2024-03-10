@@ -43,6 +43,6 @@ public class WeatherViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        disposable.clear(); // Clear the CompositeDisposable when the ViewModel is cleared
+        disposable.clear();
     }
 }
