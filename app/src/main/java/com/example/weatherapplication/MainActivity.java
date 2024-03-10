@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -14,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.weatherapplication.Adapters.HoursAdapter;
 import com.example.weatherapplication.Common.Common;
 import com.example.weatherapplication.Model.Weather;
 import com.example.weatherapplication.ViewModel.WeatherViewModel;
@@ -25,10 +28,11 @@ import com.google.android.gms.location.Priority;
 import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity {
-
     private final int FINE_PERMISSION_CODE = 1;
     private LocationCallback locationCallback;
     private WeatherViewModel viewModel;
+    private RecyclerView.Adapter adapterHours;
+    private RecyclerView recyclerView;
 
     TextView txtCity, txtLastUpdate, txtDescription, txtHumidity, txtTime, txtCelsius;
     ImageView imageView;
@@ -41,17 +45,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        Control
-//        txtCity = (TextView) findViewById(R.id.txtCity);
-//        txtLastUpdate = (TextView) findViewById(R.id.txtLastUpdate);
-//        txtDescription = (TextView) findViewById(R.id.txtDescription);
-//        txtHumidity = (TextView) findViewById(R.id.txtHumidity);
-//        txtTime = (TextView) findViewById(R.id.txtTime);
-//        txtCelsius = (TextView) findViewById(R.id.txtCelsius);
-//        imageView = (ImageView) findViewById(R.id.imageView);
-
         viewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
-
         viewModel.getWeatherData().observe(this, weather -> {
             if (weather != null) {
                 updateUI(weather);
@@ -162,6 +156,10 @@ public class MainActivity extends AppCompatActivity {
     private void updateUI(Weather weather) {
         if (weather == null) return;
 
+        int numberOfHoursForecast = 0;
+        recyclerView = findViewById(R.id.view1);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        adapterHours = new HoursAdapter(Common.listOfHoursForecast(weather));
 
 //        txtCity.setText(String.format("%s, %s,", openWeatherMap.getName(), openWeatherMap.getSys().getCountry()));
 //        txtLastUpdate.setText(String.format("Last Updated: %s", Common.getDateNow()));

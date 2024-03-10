@@ -20,7 +20,6 @@ import java.util.ArrayList;
 public class HoursAdapter extends RecyclerView.Adapter<HoursAdapter.ViewHolder> {
 
     ArrayList<Hours> items;
-    Context context;
 
     public HoursAdapter(ArrayList<Hours> items) {
         this.items = items;
@@ -30,18 +29,16 @@ public class HoursAdapter extends RecyclerView.Adapter<HoursAdapter.ViewHolder> 
     @Override
     public HoursAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.viewholder_hours, parent, false);
-        context = parent.getContext();
         return new ViewHolder(inflate);
     }
 
     @Override
     public void onBindViewHolder(@NonNull HoursAdapter.ViewHolder holder, int position) {
-        holder.datetimeTxt.setText(Common.timeFormat(items.get(position).getDatetime()));
-        holder.tempTxt.setText((int) items.get(position).getTemp());
-        int drawableResourceId = holder.itemView.getResources()
-                .getIdentifier(items.get(position).getIcon(), "drawable", holder.itemView.getContext().getPackageName());
-
-
+        Hours hours = items.get(position);
+        holder.datetimeTxt.setText(Common.timeFormat(hours.getDatetime()));
+        holder.tempTxt.setText(String.format("%s°", hours.getTemp()));
+        int iconResId = Common.getWeatherIcon(hours.getIcon());
+        holder.icon.setImageResource(iconResId);
     }
 
     @Override

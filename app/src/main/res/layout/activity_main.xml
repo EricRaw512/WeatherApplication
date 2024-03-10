@@ -47,15 +47,15 @@
                 <ImageView
                     android:id="@+id/imageView"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="150dp"
                     android:layout_margin="16dp"
-                    tools:srcCompat="@drawable/cloudy_sunny" />
+                    tools:srcCompat="@drawable/clear_day" />
 
                 <TextView
                     android:id="@+id/textView3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mostly Cloud"
+                    android:text="Clear Day"
                     android:textAlignment="center"
                     android:textColor="@color/white"
                     android:textSize="20sp" />
