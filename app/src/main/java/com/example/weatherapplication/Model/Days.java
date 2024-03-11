@@ -48,6 +48,7 @@ public class Days implements Parcelable {
         windSpeed = in.readDouble();
         conditions = in.readString();
         icon = in.readString();
+        hours = in.createTypedArrayList(Hours.CREATOR);
     }
 
     public static final Creator<Days> CREATOR = new Creator<Days>() {
@@ -167,5 +168,6 @@ public class Days implements Parcelable {
         dest.writeDouble(windSpeed);
         dest.writeString(conditions);
         dest.writeString(icon);
+        dest.writeTypedList(hours);
     }
 }

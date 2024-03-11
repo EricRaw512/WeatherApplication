@@ -36,6 +36,7 @@ public class WeatherViewModel extends ViewModel {
         weatherData.setValue(weather);
     }
 
+
     private void onError(Throwable throwable) {
         // Handle the error
     }

@@ -13,13 +13,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.weatherapplication.Adapters.TomorrowAdapter;
 import com.example.weatherapplication.Common.Common;
 import com.example.weatherapplication.Model.Days;
+import com.example.weatherapplication.Model.Weather;
 
 import java.util.ArrayList;
 
 public class TomorrowActivity extends AppCompatActivity {
     private TextView txtTomCond, txtTomTemp, txtTomPreProb, txtTomPreType, txtTomWindSpeed, txtTomHumid;
     private ImageView tomorrowIcon, tomorrowPrecipIcon, tomorrowWindIcon, tomorrowHumidIcon, backIcon;
-    private ArrayList<Days> days;
+    private Weather weather;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,7 +38,7 @@ public class TomorrowActivity extends AppCompatActivity {
         tomorrowHumidIcon = (ImageView) findViewById(R.id.TomorrowHumidityIcon);
         backIcon = (ImageView) findViewById(R.id.backIcon);
 
-        days = getIntent().getParcelableArrayListExtra("daysList");
+        weather = getIntent().getParcelableExtra("weather");
         initView();
     }
 
@@ -45,10 +46,10 @@ public class TomorrowActivity extends AppCompatActivity {
         ArrayList<Days> sevenDays = new ArrayList<>();
         setButton();
         for (int i = 2; i < 8; i++) {
-            sevenDays.add(days.get(i));
+            sevenDays.add(weather.getDays().get(i));
         }
 
-        Days tomorrowWeather = days.get(1);
+        Days tomorrowWeather = weather.getDays().get(1);
         txtTomCond.setText(tomorrowWeather.getConditions());
         txtTomTemp.setText(String.format("%s°C", tomorrowWeather.getTemp()));
         txtTomPreProb.setText(String.format("%s%%", tomorrowWeather.getPrecipProb()));
@@ -71,6 +72,7 @@ public class TomorrowActivity extends AppCompatActivity {
         ConstraintLayout backBtn = findViewById(R.id.back_btn);
         backBtn.setOnClickListener(v -> {
             Intent intent = new Intent(TomorrowActivity.this, MainActivity.class);
+            intent.putExtra("weather", weather);
             startActivity(intent);
         });
     }

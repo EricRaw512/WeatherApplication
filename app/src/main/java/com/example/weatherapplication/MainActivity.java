@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.Manifest;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,6 +30,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final int FINE_PERMISSION_CODE = 1;
@@ -46,13 +48,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        viewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
-        viewModel.getWeatherData().observe(this, weather -> {
-            if (weather != null) {
-                updateUI(weather);
-            }
-        });
-
         //set Context
         txtDate = (TextView) findViewById(R.id.textDate);
         txtCondition = (TextView) findViewById(R.id.textCondition);
@@ -63,9 +58,21 @@ public class MainActivity extends AppCompatActivity {
         txtWindSpeed = (TextView) findViewById(R.id.textWindSpeed);
         txtHumidity = (TextView) findViewById(R.id.textHumidityPercen);
         weatherIcon = (ImageView) findViewById(R.id.weatherIcon);
-        precipIcon = (ImageView) findViewById(R.id.precipIcon); 
+        precipIcon = (ImageView) findViewById(R.id.precipIcon);
         windIcon = (ImageView) findViewById(R.id.windIcon);
         humidityIcon = (ImageView) findViewById(R.id.humidityIcon);
+
+        Weather weather = getIntent().getParcelableExtra("weather");
+        if (weather != null) {
+            updateUI(weather);
+        }
+
+        viewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
+        viewModel.getWeatherData().observe(this, fetchedWeather -> {
+            if (fetchedWeather != null) {
+                updateUI(fetchedWeather);
+            }
+        });
 
         //Get Coordinates
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -105,12 +112,6 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(location -> {
                     Log.d("MainActivity", "No location available");
                     if (location != null) {
-                        // Update your UI with location data
-                        currentLocation = location;
-                        // Access latitude and longitude here
-                        lat = location.getLatitude();
-                        lng = location.getLongitude();
-                        // ... (use latitude and longitude as needed)
                         String latLng = Common.apiRequest(String.valueOf(lat), String.valueOf(lng));
                         viewModel.fetchWeatherData(latLng);
                     } else {
@@ -152,7 +153,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public boolean checkPermission() {
-        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED);
+        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED);
     }
 
     @Override
@@ -196,8 +198,7 @@ public class MainActivity extends AppCompatActivity {
         TextView next7DayBtn = findViewById(R.id.nxt7DaysBtn);
         next7DayBtn.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, TomorrowActivity.class);
-            ArrayList<Days> daysList = new ArrayList<>(weather.getDays());
-            intent.putParcelableArrayListExtra("daysList", daysList);
+            intent.putExtra("weather", weather);
             startActivity(intent);
         });
     }
