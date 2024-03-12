@@ -33,6 +33,11 @@
             android:name=".TomorrowActivity"
             android:exported="true">
         </activity>
+
+        <meta-data
+            android:name = "keyValue"
+            android:value = "${KEY}"/>
+
     </application>
 
 
